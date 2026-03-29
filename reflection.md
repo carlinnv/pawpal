@@ -4,8 +4,10 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
+- Briefly describe your initial UML design. 
+    -    My initial UML design includes my main classes, including their attributes and methods. I have identified four main classes: User, Pet, Task, and Schedule. Users will be able to specify their own preferences, which will help with identifying constraints later when developing schedules. They will also be able to specify their pets' traits. Users should also be able to schedule tasks, and lastly, create a daily schedule along with explanations. 
 - What classes did you include, and what responsibilities did you assign to each?
+    - I included the User, Pet, Task, and Schedule classes. The User class should store all of the users' characteristics, such as their preferences and availabilities. The Pet should include the pets' needs, such as their hunger and energy. The Tasks would include things like walking and feeding, and would be used by the User to keep track of and fulfill their Pets' needs. Lastly, the User would be able to generate a daily Schedule that includes all of the tasks for a specific pet. 
 
 **b. Design changes**
 
