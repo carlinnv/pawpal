@@ -226,3 +226,82 @@ def test_task_setters_validate_and_update_values() -> None:
 
 	with pytest.raises(ValueError):
 		task.set_time_slot("   ")
+
+
+def test_get_daily_plan_sorts_ties_by_task_type() -> None:
+	pet = Pet(name="Mochi")
+	b_task = Task(task_type="Brush", priority=3, time_slot="morning", pet=pet)
+	a_task = Task(task_type="Administer meds", priority=3, time_slot="morning", pet=pet)
+
+	schedule = Schedule(date="2026-03-31", tasks=[b_task, a_task])
+	ordered_tasks = schedule.get_daily_plan()
+
+	assert ordered_tasks == [a_task, b_task]
+
+
+def test_complete_daily_task_rolls_due_date_across_new_year() -> None:
+	owner = User(availability="Anytime")
+	pet = Pet(name="Mochi")
+	task = Task(
+		task_type="Daily meds",
+		priority=4,
+		time_slot="night",
+		pet=pet,
+		recurrence=" DAILY ",
+		due_date=date(2026, 12, 31),
+	)
+	owner.schedule_task(task)
+
+	next_task = owner.mark_task_complete(task)
+
+	assert next_task is not None
+	assert next_task.recurrence == "daily"
+	assert next_task.due_date == date(2027, 1, 1)
+
+
+def test_complete_weekly_task_rolls_due_date_across_month() -> None:
+	owner = User(availability="Weeknights")
+	pet = Pet(name="Nori")
+	task = Task(
+		task_type="Brush coat",
+		priority=2,
+		time_slot="evening",
+		pet=pet,
+		recurrence="weekly",
+		due_date=date(2026, 1, 29),
+	)
+
+	next_task = owner.mark_task_complete(task)
+
+	assert next_task is not None
+	assert next_task.due_date == date(2026, 2, 5)
+
+
+def test_schedule_conflict_detection_ignores_case_and_whitespace() -> None:
+	mochi_a = Pet(name="  MOCHI  ")
+	mochi_b = Pet(name="mochi")
+	schedule = Schedule(date="2026-03-31")
+	first_task = Task(task_type="Morning walk", priority=3, time_slot=" Morning ", pet=mochi_a)
+	second_task = Task(task_type="Feed breakfast", priority=4, time_slot="morning", pet=mochi_b)
+
+	schedule.add_task(first_task)
+	warning = schedule.add_task(second_task)
+
+	assert warning is not None
+	assert "conflicts" in warning.lower()
+	assert len(schedule.tasks) == 1
+
+
+def test_detect_time_conflicts_returns_all_pairs_for_three_matching_tasks() -> None:
+	pet = Pet(name="Mochi")
+	task_one = Task(task_type="Walk", priority=3, time_slot="morning", pet=pet)
+	task_two = Task(task_type="Feed", priority=4, time_slot="morning", pet=pet)
+	task_three = Task(task_type="Meds", priority=5, time_slot="morning", pet=pet)
+
+	schedule = Schedule(date="2026-03-31", tasks=[task_one, task_two, task_three])
+	conflicts = schedule.detect_time_conflicts()
+
+	assert len(conflicts) == 3
+	assert (task_one, task_two) in conflicts
+	assert (task_one, task_three) in conflicts
+	assert (task_two, task_three) in conflicts

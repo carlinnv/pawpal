@@ -42,7 +42,7 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
-### Smarter Scheduling
+## Smarter Scheduling
 Here’s a summary of the new features now in your PawPal scheduler:
 
 1. Recurring task support
@@ -86,8 +86,19 @@ Here’s a summary of the new features now in your PawPal scheduler:
 - filtering and sorting behavior
 - Test coverage is in test_pawpal.py.
 
+## Testing PawPal+ 
 
-### Mermaid.js diagram
+Run the automated tests with:
+
+```bash
+python -m pytest
+```
+
+Current tests cover the core scheduling behaviors, including recurring task rollover (`daily` and `weekly`), due-date validation, task completion flow, sorting correctness, filtering by completion/pet, and same-pet/same-time conflict detection (including conflict warnings and pair detection).
+
+Confidence in system reliability: **5/5** based on the latest test run with all tests passing.
+
+## Mermaid.js diagram
 classDiagram
     class User {
         -preferences: String
