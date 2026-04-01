@@ -86,8 +86,44 @@ Here’s a summary of the new features now in your PawPal scheduler:
 - filtering and sorting behavior
 - Test coverage is in test_pawpal.py.
 
-## Testing PawPal+ 
+## Features and Algorithms Implemented
 
+1. Priority-based daily planning
+- Uses multi-key sorting to order tasks by completion status, priority, time-slot order, and tie-breakers.
+- Produces stable, predictable daily plans when tasks have similar urgency.
+
+2. Recurring task rollover
+- Completing a recurring task automatically creates the next task instance.
+- Date increment logic uses `timedelta`:
+    - Daily tasks move forward by 1 day.
+    - Weekly tasks move forward by 7 days.
+
+3. Recurrence and due-date validation
+- Allowed recurrence values are enforced as `none`, `daily`, or `weekly`.
+- `daily` and `weekly` tasks must include a due date.
+- Prevents invalid task states at object creation time.
+
+4. Same-pet same-time conflict detection
+- Detects time collisions for tasks assigned to the same pet and time slot.
+- Supports both candidate conflict checks and full schedule conflict scans.
+
+5. Non-crashing conflict handling
+- Conflicts generate warning messages instead of raising hard errors.
+- Warnings are stored so the app can continue running and still inform the user.
+
+6. One-pass task filtering
+- Filters tasks by completion status and/or pet name in a single pass.
+- Pet-name matching is normalized with trim and case-insensitive comparisons.
+
+7. Constraint-aware schedule generation
+- Daily schedules are generated from incomplete tasks only.
+- Completed tasks are excluded from active planning views.
+
+8. Bounded pet state updates
+- Hunger and energy values are clamped to the valid range of 0 to 10.
+- Keeps pet-state data safe and consistent for planning and display.
+
+## Testing PawPal+ 
 Run the automated tests with:
 
 ```bash
@@ -98,54 +134,64 @@ Current tests cover the core scheduling behaviors, including recurring task roll
 
 Confidence in system reliability: **5/5** based on the latest test run with all tests passing.
 
+## Demo
+
+![PawPal demo](demo.png)
+
 ## Mermaid.js diagram
 classDiagram
     class User {
-        -preferences: String
         -availability: String
         -pets: List~Pet~
-        -scheduledTasks: List~Task~
-        +setPreferences(preferences: String) void
-        +setAvailability(availability: String) void
-        +addPet(pet: Pet) void
-        +scheduleTask(task: Task) void
-        +createDailySchedule(date: String) Schedule
+        -scheduled_tasks: List~Task~
+        -schedules: List~Schedule~
+        +set_availability(availability: String) void
+        +add_pet(pet: Pet) void
+        +schedule_task(task: Task) void
+        +complete_task(task: Task) Task
+        +mark_task_complete(task: Task) Task
+        +create_daily_schedule(date: String) Schedule
     }
 
     class Pet {
         -name: String
-        -traits: List~String~
-        -hungerLevel: int
-        -energyLevel: int
-        +setTraits(traits: List~String~) void
-        +updateHunger(level: int) void
-        +updateEnergy(level: int) void
-        +getNeedsSummary() String
+        -hunger_level: int
+        -energy_level: int
+        +update_hunger(level: int) void
+        +update_energy(level: int) void
+        +get_needs_summary() String
     }
 
     class Task {
-        -taskType: String
+        -task_type: String
         -priority: int
-        -timeSlot: String
-        -notes: String
-        +assignToPet(pet: Pet) void
-        +setPriority(priority: int) void
-        +setTimeSlot(timeSlot: String) void
-        +markComplete() void
+        -time_slot: String
+        -pet: Pet
+        -is_completed: bool
+        -recurrence: String
+        -due_date: date
+        +assign_to_pet(pet: Pet) void
+        +set_priority(priority: int) void
+        +set_time_slot(time_slot: String) void
+        +mark_complete() Task
     }
 
     class Schedule {
         -date: String
         -tasks: List~Task~
         -explanation: String
-        +addTask(task: Task) void
-        +removeTask(task: Task) void
-        +generateExplanation() String
-        +getDailyPlan() List~Task~
+        -warnings: List~String~
+        +add_task(task: Task) String
+        +has_time_conflict(candidate_task: Task) bool
+        +detect_time_conflicts() List~Tuple~Task,Task~~
+        +remove_task(task: Task) void
+        +generate_explanation() String
+        +get_daily_plan() List~Task~
+        +filter_tasks(is_completed: bool, pet_name: String) List~Task~
     }
 
     User "1" o-- "*" Pet : owns
-    User "1" --> "*" Task : schedules
-    User "1" --> "*" Schedule : creates
+    User "1" o-- "*" Task : scheduled_tasks
+    User "1" o-- "*" Schedule : schedules
     Schedule "1" *-- "*" Task : contains
-    Pet "1" --> "*" Task : needs
+    Task "*" --> "0..1" Pet : assigned_to

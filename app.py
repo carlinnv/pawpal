@@ -10,9 +10,6 @@ def _initialize_session_state() -> None:
     if "pets_by_name" not in st.session_state:
         st.session_state.pets_by_name = {}
 
-    if "task_objects" not in st.session_state:
-        st.session_state.task_objects = []
-
 
 _initialize_session_state()
 
@@ -115,12 +112,20 @@ if st.button("Add task"):
         new_task.set_priority(priority_map[priority])
         new_task.set_time_slot(time_slot)
         new_task.assign_to_pet(selected_pet)
-        owner.schedule_task(new_task)
-        st.session_state.task_objects.append(new_task)
-        st.success(f"Added task '{new_task.task_type}' for {selected_pet.name}.")
+        active_tasks = [task for task in owner.scheduled_tasks if not task.is_completed]
+        preview_schedule = Schedule(date="Today", tasks=active_tasks)
+        conflict_warning = preview_schedule.add_task(new_task)
 
-if st.session_state.task_objects:
+        if conflict_warning is not None:
+            st.warning(conflict_warning)
+        else:
+            owner.schedule_task(new_task)
+            st.success(f"Added task '{new_task.task_type}' for {selected_pet.name}.")
+
+owner = st.session_state.owner
+if owner.scheduled_tasks:
     st.write("Current tasks:")
+    sorted_tasks = Schedule(date="Today", tasks=owner.scheduled_tasks).get_daily_plan()
     st.table(
         [
             {
@@ -128,8 +133,9 @@ if st.session_state.task_objects:
                 "priority": task.priority,
                 "time_slot": task.time_slot,
                 "pet": task.pet.name if task.pet else "Unassigned",
+                "completed": task.is_completed,
             }
-            for task in st.session_state.task_objects
+            for task in sorted_tasks
         ]
     )
 else:
@@ -144,12 +150,26 @@ if st.button("Generate schedule"):
     owner = st.session_state.owner
     owner.set_availability(f"Owner: {owner_name} | Species: {species}")
     schedule = owner.create_daily_schedule(date="Today")
-    plan = schedule.get_daily_plan()
+    all_tasks_schedule = Schedule(date="Today", tasks=owner.scheduled_tasks)
+    sorted_tasks = all_tasks_schedule.get_daily_plan()
+    pending_tasks = all_tasks_schedule.filter_tasks(is_completed=False)
+    completed_tasks = all_tasks_schedule.filter_tasks(is_completed=True)
 
-    if not plan:
+    if not sorted_tasks:
         st.warning("No tasks available to schedule yet.")
     else:
-        st.success("Schedule generated.")
+        st.success("Schedule generated with sorted and filtered task views.")
+
+        if schedule.warnings:
+            for warning in schedule.warnings:
+                st.warning(warning)
+
+        stats_col1, stats_col2, stats_col3 = st.columns(3)
+        stats_col1.metric("Total tasks", len(sorted_tasks))
+        stats_col2.metric("Pending", len(pending_tasks))
+        stats_col3.metric("Completed", len(completed_tasks))
+
+        st.markdown("#### Sorted Plan")
         st.table(
             [
                 {
@@ -159,8 +179,43 @@ if st.button("Generate schedule"):
                     "priority": task.priority,
                     "completed": task.is_completed,
                 }
-                for task in plan
+                for task in sorted_tasks
             ]
         )
+
+        st.markdown("#### Filtered Views")
+        pending_tab, completed_tab = st.tabs(["Pending", "Completed"])
+        with pending_tab:
+            if pending_tasks:
+                st.table(
+                    [
+                        {
+                            "time_slot": task.time_slot,
+                            "task": task.task_type,
+                            "pet": task.pet.name if task.pet else "Unassigned",
+                            "priority": task.priority,
+                        }
+                        for task in pending_tasks
+                    ]
+                )
+            else:
+                st.info("No pending tasks.")
+
+        with completed_tab:
+            if completed_tasks:
+                st.table(
+                    [
+                        {
+                            "time_slot": task.time_slot,
+                            "task": task.task_type,
+                            "pet": task.pet.name if task.pet else "Unassigned",
+                            "priority": task.priority,
+                        }
+                        for task in completed_tasks
+                    ]
+                )
+            else:
+                st.info("No completed tasks yet.")
+
         st.write("Explanation:")
         st.write(schedule.generate_explanation())
