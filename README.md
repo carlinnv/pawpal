@@ -41,3 +41,56 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+
+### Mermaid.js diagram
+classDiagram
+    class User {
+        -preferences: String
+        -availability: String
+        -pets: List~Pet~
+        -scheduledTasks: List~Task~
+        +setPreferences(preferences: String) void
+        +setAvailability(availability: String) void
+        +addPet(pet: Pet) void
+        +scheduleTask(task: Task) void
+        +createDailySchedule(date: String) Schedule
+    }
+
+    class Pet {
+        -name: String
+        -traits: List~String~
+        -hungerLevel: int
+        -energyLevel: int
+        +setTraits(traits: List~String~) void
+        +updateHunger(level: int) void
+        +updateEnergy(level: int) void
+        +getNeedsSummary() String
+    }
+
+    class Task {
+        -taskType: String
+        -priority: int
+        -timeSlot: String
+        -notes: String
+        +assignToPet(pet: Pet) void
+        +setPriority(priority: int) void
+        +setTimeSlot(timeSlot: String) void
+        +markComplete() void
+    }
+
+    class Schedule {
+        -date: String
+        -tasks: List~Task~
+        -explanation: String
+        +addTask(task: Task) void
+        +removeTask(task: Task) void
+        +generateExplanation() String
+        +getDailyPlan() List~Task~
+    }
+
+    User "1" o-- "*" Pet : owns
+    User "1" --> "*" Task : schedules
+    User "1" --> "*" Schedule : creates
+    Schedule "1" *-- "*" Task : contains
+    Pet "1" --> "*" Task : needs
