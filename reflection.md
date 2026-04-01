@@ -12,7 +12,9 @@
 **b. Design changes**
 
 - Did your design change during implementation?
+    - Yes, they did. I asked Copilot to describe any missing relationships, as well as to name certain attributes that would most likely not be used at runtime. Based on Chat's suggestions, I added/changed certain relationships for the classes so that the attributes would actually be used in the program. 
 - If yes, describe at least one change and why you made it.
+    - One of the changes concerned the "Date" attribute in the Schedule class I created. Originally, the date was not used at all in the relationship between classes, making it a redundant attribute. After consulting Copilot, I decided to make it so that each Schedule had to be linked back to a User. This way, the User can refer back to previous schedules using the Date attribute. 
 
 ---
 

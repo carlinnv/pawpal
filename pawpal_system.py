@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 
 
@@ -23,7 +23,6 @@ class Task:
 	task_type: str
 	priority: int
 	time_slot: str
-	notes: str = ""
 	pet: Optional[Pet] = None
 
 	def assign_to_pet(self, pet: Pet) -> None:
@@ -64,10 +63,12 @@ class User:
 		availability: str,
 		pets: Optional[List[Pet]] = None,
 		scheduled_tasks: Optional[List[Task]] = None,
+		schedules: Optional[List[Schedule]] = None,
 	) -> None:
 		self.availability = availability
 		self.pets = pets if pets is not None else []
 		self.scheduled_tasks = scheduled_tasks if scheduled_tasks is not None else []
+		self.schedules = schedules if schedules is not None else []
 
 	def set_availability(self, availability: str) -> None:
 		pass
