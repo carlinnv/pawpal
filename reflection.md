@@ -28,7 +28,9 @@
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+    - My scheduler made a tradeoff between efficiency and readability. Originally, my filter_tasks method conducted step-by-step list reassignment. Instead of doing this, the AI suggested I do a one-pass filter to make it faster. However, the tradeoff is that it the code has become a little harder to read for human readers because of the boolean conditions used. 
 - Why is that tradeoff reasonable for this scenario?
+    - The tradeoff is reasonable because there is still documentation for the methods, which will help future programmers understand what the code does. Furthermore, it is important for the filtering method to be fast in the case that the schedule has a lot of tasks. 
 
 ---
 

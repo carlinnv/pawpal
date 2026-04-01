@@ -42,6 +42,50 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+### Smarter Scheduling
+Here’s a summary of the new features now in your PawPal scheduler:
+
+1. Recurring task support
+- Tasks now support recurrence values: `none`, `daily`, and `weekly`.
+- Validation happens at creation time so invalid recurrence values are rejected.
+- Implemented in pawpal_system.py.
+
+2. Due dates for recurring tasks
+- `daily` and `weekly` tasks require a `due_date`.
+- Marking a recurring task complete creates a new task instance with the next due date calculated using `timedelta`:
+- Daily: +1 day
+- Weekly: +7 days
+- Implemented in pawpal_system.py.
+
+3. Completion workflow helper
+- Added `mark_task_complete` on `User` as a wrapper around completion logic.
+- It marks the current task complete and auto-schedules the next recurring instance (when applicable).
+- Implemented in pawpal_system.py.
+
+4. Time conflict detection in Schedule
+- Schedule now detects same-pet, same-time conflicts.
+- Conflict utilities include checking one candidate and scanning all conflicts.
+- Implemented in pawpal_system.py.
+
+5. Lightweight conflict handling (non-crashing)
+- Conflict handling was changed from raising errors to returning warning messages.
+- `Schedule` now stores warnings in `self.warnings` so the app can continue running.
+- Implemented in pawpal_system.py.
+
+6. Improved task filtering
+- `filter_tasks` was refactored into a cleaner one-pass implementation.
+- Supports filtering by completion status and/or pet name with normalized matching.
+- Implemented in pawpal_system.py.
+
+7. Expanded automated tests
+- Added tests for:
+- recurring task rollover (`daily` and `weekly`)
+- due-date requirement validation
+- conflict detection and warning behavior
+- direct conflict-pair detection
+- filtering and sorting behavior
+- Test coverage is in test_pawpal.py.
+
 
 ### Mermaid.js diagram
 classDiagram
